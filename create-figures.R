@@ -169,7 +169,8 @@ glasgow1 |>
   geom_vline(xintercept = 9, linetype = "dotted") +
   scale_color_brewer(type = "qual") +
   labs(
-    y = "Change in P(drinking at least monthly)"
+    y = "Change in P(drinking at least monthly)",
+    x = "Embedding dimension (okay to over-estimate!)"
   ) +
   theme_classic(base_size = 18, base_family = "Fira Sans")
 
@@ -179,7 +180,97 @@ ggsave(
   width = 6 * 13/9,
   dpi = 500
 )
-#
+
+library(tidygraph)
+library(ggdag)
+
+coords <- tibble(
+  name = c("Ci", "Ti", "Xi", "Yi", "Aij", "Xj"),
+  x = c(1, 0, 2, 1, 3, 4),
+  y = c(2, 1, 1, 0, 0, 1)
+)
+
+#  example from the dagitty package
+dag <- dagify(
+  Yi ~ Ti + Ci + Xi,
+  Aij ~ Xi + Xj,
+  Xi ~ Ti + Ci,
+  Ti ~ Ci,
+  coords = coords,
+  latent = c("Xi", "Xj"),
+  labels = c(
+    Ci = "C[i]",
+    Ti = "T[i]",
+    Xi = "X[i]",
+    Yi = "Y[i]",
+    Aij = "A[ij]",
+    Xj = "X[j]"
+  ),
+  exposure = "Ti",
+  outcome = "Yi"
+)
+
+dag |>
+  tidy_dagitty() |>
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_point() +
+  geom_dag_edges() +
+  geom_dag_text(aes(label = label), parse = TRUE, size = 5) +
+  theme_dag(base_size = 18, base_family = "Fira Sans")
+
+ggsave(
+  here::here("figures/dag-mediating.png"),
+  height = 4,
+  width = 4 * 13/9,
+  dpi = 500
+)
+
+labels <- c(
+  Ci = "Controls[i]",
+  Ti = "Likes~frisbee[i]",
+  Xi = "Social~identity[i]",
+  Yi = "Visits~to~Great~Dane[i]",
+  Aij = "Friendship[ij]",
+  Xj = "Social~identity[j]"
+)
+#  example from the dagitty package
+dag2 <- dagify(
+  Yi ~ Ti + Ci + Xi,
+  Aij ~ Xi + Xj,
+  Xi ~ Ti + Ci,
+  Ti ~ Ci,
+  coords = coords,
+  latent = c("Xi", "Xj"),
+  labels = labels,
+  exposure = "Ti",
+  outcome = "Yi"
+)
+
+dag2 |>
+  tidy_dagitty() |>
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  # geom_dag_point() +
+  geom_dag_edges(
+    start_cap = circle(15, 'mm'),
+    end_cap = circle(15, 'mm')
+    ) +
+  geom_dag_text(aes(label = label), parse = TRUE, size = 4, color = "black") +
+  theme_dag(base_size = 18, base_family = "Fira Sans")
+
+ggsave(
+  here::here("figures/dag-mediating-concrete.png"),
+  height = 4,
+  width = 4 * 13/9,
+  dpi = 500
+)
+
+
+tidy_dag <- tidy_dagitty(dag)
+tidy_dag
+
+
+ggdag(dag) +
+  theme_dag()
 # library(vsp)
 #
 # fa1 <- vsp(A1, rank = 9, degree_normalize = FALSE)
