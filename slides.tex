@@ -31,35 +31,13 @@
 
 \maketitle
 
-
-\begin{frame}{This is joint work}
-    \begin{columns}
-
-        \column{0.49 \textwidth}
-
-        \begin{figure}
-            \includegraphics[width=0.8\textwidth]{figures/keith.jpg}
-            \caption{Keith Levin, assistant professor in statistics}
-        \end{figure}
-
-        \column{0.49 \textwidth}
-
-        \begin{figure}
-            \includegraphics[width=0.9\textwidth]{figures/mystery-person2.jpg}
-            \caption{You, our new collaborator??}
-        \end{figure}
-
-    \end{columns}
-
-\end{frame}
-
 \begin{frame}{Motivating example}
 
     \begin{columns}
 
         \column{0.4 \textwidth}
 
-        \textbf{Does access to additional spending money cause adolescents to smoke, drink, and get high more often?}
+        \textbf{Do age and access to spending money cause adolescents to drink \faIcon{beer}?}
 
         \column{0.6 \textwidth}
 
@@ -89,21 +67,12 @@
     \centering
     \vspace{3mm}
     \begin{figure}
-        \includegraphics[width=\textwidth]{figures/glasgow-alcohol.png}
-    \end{figure}
-\end{frame}
-
-\begin{frame}
-    \centering
-    \vspace{3mm}
-    \begin{figure}
         \includegraphics[width=\textwidth]{figures/glasgow-friendgroups.png}
     \end{figure}
 \end{frame}
 
-\section{Models of community membership in networks}
 
-\begin{frame}{Homophily via stochastic blockmodels (SBMs)}
+\begin{frame}{Stochastic blockmodels (SBMs)}
 
     \begin{columns}
         \column{0.45\textwidth}
@@ -127,10 +96,6 @@
         $B \in [0, 1]^{d \times d}$ inter-block edge probabilities
 
         $\P[Z]{A_{ij} = 1} = Z_{i \cdot} B Z_{j \cdot}^T$
-
-        \vspace{4mm}
-
-        Nodal outcomes $Y_i$, treatments $T_i$, and controls $C_i$ related to latent $Z$
 
     \end{columns}
 
@@ -168,6 +133,8 @@
 
     \begin{remark}
         We consider symmetric positive semi-definite $\E[\X]{A}$ to simplify notation, but everything works for generic $\E[\X]{A}$.
+
+        This implies possible applications to spatial networks, text data, psychometric surveys, imaging data, and omics panels.
     \end{remark}
 
     \begin{remark}
@@ -191,8 +158,6 @@
 
     \end{definition}
 
-    These are the ``principle components'' of the network
-
     The analyst must specify $\widehat{d}$
 
 \end{frame}
@@ -211,7 +176,7 @@
 
 \end{frame}
 
-\section{Causal inference on networks}
+\section{Behavior that varies over a network}
 
 \begin{frame}{Notation}
     \begin{columns}
@@ -225,9 +190,9 @@
 
         Network $A \in \R^{n \times n}$
 
-        Nodal covariates $\W_{1 \cdot}, ..., \W_{n \cdot} \in \R^{p}$
-
         Latent positions $\X_{1 \cdot}, ..., \X_{n \cdot} \in \R^d$
+
+        Nodal covariates $\W_{1 \cdot}, ..., \W_{n \cdot} \in \R^{p}$
 
         Nodal outcomes $Y_1, ..., Y_n \in \R$
 
@@ -237,66 +202,58 @@
 
         Treatment $T_i \in \set{0, 1}$
 
-        Controls $\C_{i \cdot} \in \R^{p - 1}$
+        Controls $\C_{i \cdot} \in \R^{p'}$
 
     \end{columns}
 \end{frame}
 
-\begin{frame}{The big picture}
+\begin{frame}{A regression model for latent position}
 
-    Homophily is a big deal when you're trying to do causal inference on a network.
+    Idea: interventions $T_i$ can cause community membership $\X_{i \cdot}$
 
-    \cite{christakis_spread_2007} claimed obesity was socially contagious, to much fanfare. Statisticians have spent the subsequent 15 years curb-stomping the paper.
+    \begin{align*}
+        \underbrace{\E[T_i, \C_{i \cdot}]{\X_{i \cdot}}}_{\R^{1 \times d}}
+         & = \underbrace{\thetazero}_{\R^{1 \times d}}
+        + \underbrace{T_i}_{\{0, 1\}} \underbrace{\thetat}_{\R^{1 \times d}}
+        + \underbrace{\C_{i \cdot}}_{\R^{1 \times p'}} \underbrace{\Thetac}_{\R^{p' \times d}}
+        + \underbrace{T_i}_{\{0, 1\}} \underbrace{\C_{i \cdot}}_{\R^{1 \times p'}} \underbrace{\Thetatc}_{\R^{p' \times d}}.
+    \end{align*}
 
-    Homophily can act as a \emph{powerful} confounder \citep{shalizi_homophily_2011}.
-
-\end{frame}
-
-
-\begin{frame}{Community membership can be a confounder}
-
-    \begin{figure}
-        \centering
-        \includegraphics[width=1.1\textwidth]{figures/concrete-confounding-homophily.pdf}
-        \caption{Directed acyclic graph (DAG) for node $i$. Portions of the DAG corresponding to nodes $j \neq i$ are omitted. $\X_i$ and $\X_j$ are not observed.}
-        \label{fig:concrete-confounding}
-    \end{figure}
+    Example: I like frisbee so I joined an ultimate frisbee team (MUFA) and am likely to form connections to other frisbee players
 
 \end{frame}
 
-\begin{frame}{Community membership can be a mediator}
+\begin{frame}{A regression model for outcomes}
 
-    \begin{figure}
-        \centering
-        \includegraphics[width=1.1\textwidth]{figures/concrete-mediating-homophily.pdf}
-        \caption{Directed acyclic graph (DAG) for node $i$. Portions of the DAG corresponding to nodes $j \neq i$ are omitted. $\X_i$ and $\X_j$ are not observed.}
-        \label{fig:concrete-mediating}
-    \end{figure}
+    Idea: community membership $\X_{i \cdot}$ can cause outcomes $Y_i$
+
+    \begin{align*}
+        \underbrace{\E[T_i, \C_{i \cdot}, \X_{i \cdot}]{Y_i}}_{\R}
+         & = \underbrace{\betazero}_{\R}
+        + \underbrace{T_i}_{\{0, 1\}} \underbrace{\betat}_{\R}
+        + \underbrace{\C_{i \cdot}}_{\R^{1 \times p'}} \underbrace{\betac}_{\R^{p'}}
+        + \underbrace{\X_{i \cdot}}_{\R^{1 \times d}} \underbrace{\betax}_{\R^d}
+    \end{align*}
+
+    Example: I'm on a frisbee team, and the frisbee team goes to the Great Dane together after each game
 
 \end{frame}
 
-\begin{frame}{Causation and homophily}
+\begin{frame}{Some hints at where the causal stuff is going}
 
-    \textbf{Confounding homophily} is a big deal \citep{shalizi_homophily_2011}, and dealing with confounding homophily is a very active area of research.
+    The network \emph{mediates} the relationship between treatments $T_i$ and outcomes $Y_i$
 
-    \vspace{3mm}
-
-    \textbf{Mediating homophily} is somehow flying under the radar.
-\end{frame}
-
-\begin{frame}{Causal assumptions}
-
-    \centering
-
-    \begin{figure}
-        \includegraphics[width=0.9\textwidth]{figures/mediating.png}
-        \caption{Directed acyclic graph (DAG) for node $i$. Portions of the DAG corresponding to nodes $j \neq i$ are omitted. $\X_i$ and $\X_j$ are not observed.}
-        \label{fig:mediating}
-    \end{figure}
+    \begin{itemize}
+        \item I like frisbee, and this might cause me to go the Great Dane more or less often, independent of my friends. This is a \emph{direct effect}
+        \item I like frisbee, which causes me to be on a frisbee team, which in term causes me to go the Great Dane with my frisbee team. This is an \emph{indirect effect}
+        \item The total effect of liking frisbee is some combination of the direct and indirect effect
+    \end{itemize}
 
 \end{frame}
 
 \begin{frame}{Causal estimands}
+
+    \textbf{Warning:} slight change in notation. Now we consider a single node, and let $Y_{t x}$ denote a counterfactual.
 
     \begin{itemize}
         \item \emph{Average treatment effect}: how much the outcome $Y$ would change on average if the treatment $T$ were changed from $T = t$ to $T = t^*$
@@ -317,8 +274,6 @@
 
 \begin{frame}{Causal estimands}
 
-    \textbf{Warning:} slight change in notation. Now we consider a single node, and let $Y_{t x}$ denote a counterfactual.
-
     \begin{itemize}
         \item \emph{Natural direct effect}: how much the outcome $Y$ would change if the exposure $T$ were set at level $T = t^*$ versus $T = t$ but for each individual the mediator $\X$ were kept at the level it would have taken, for that individual, if $T$ had been set to $t^*$
 
@@ -335,7 +290,7 @@
 \begin{frame}{Causal estimands}
 
     \begin{itemize}
-        \item \emph{Natural indirect effect}: how much the outcome $Y$ would change on average if the exposure were fixed at level $T = t^*$ but the mediator $\X$ were changed from the level it would take if $T=t$ to the level it would take if $T = t^*$
+        \item \emph{Natural indirect effect}: how much the outcome $Y$ would change on average if the exposure were fixed at level $T = t^*$ but the mediator $\X$ were changed from the level it would take if $T = t$ to the level it would take if $T = t^*$
 
               \begin{equation*}
                   \nie = \E{Y_{t \, \X_{t}} - Y_{t \, \X_{t^*}}}
@@ -350,23 +305,38 @@
 
 \end{frame}
 
-\begin{frame}{Regression incorporating network principal components}
+\begin{frame}{Causal identification in the frisbee example}
 
-    Regression with rank-$\widehat{d}$ truncated singular value decomposition of $A$
+    \centering
 
-    \begin{align*}
-        \E[\X]{A}                           & = \X \X^T = \Upop \Spop \Upop^T             \\
-        \E[\W_{i \cdot}, \X_{i \cdot}]{Y_i} & = \W_{i \cdot} \betaw + \X_{i \cdot} \betax
-    \end{align*}
+    \begin{figure}
+        \includegraphics[width=1.2\textwidth]{figures/great-dane.pdf}
+        \caption{Directed acyclic graph (DAG) for node $i$. Portions of the DAG corresponding to nodes $j \neq i$ are omitted. Social identities are latent.}
+        \label{fig:great-dane}
+    \end{figure}
 
 \end{frame}
 
+\begin{frame}{Causal identification more general}
+
+    \centering
+
+    \begin{figure}
+        \includegraphics[width=0.9\textwidth]{figures/mediating.png}
+        \caption{Directed acyclic graph (DAG) for node $i$. Portions of the DAG corresponding to nodes $j \neq i$ are omitted. $\X_i$ and $\X_j$ are not observed.}
+        \label{fig:mediating}
+    \end{figure}
+
+\end{frame}
+
+
+
 \begin{frame}{Semi-parametric causal identification}
 
-    If the mediation DAG holds (non-parametric assumption!) and additionally
+    Recall the regression models:
 
-
-    \begin{equation*} \begin{aligned}
+    \begin{equation*}
+        \begin{aligned}
             \underbrace{\E[T_i, \C_{i \cdot}, \X_{i \cdot}]{Y_i}}_{\R}
              & = \underbrace{\betazero}_{\R}
             + \underbrace{T_i}_{\{0, 1\}} \underbrace{\betat}_{\R}
@@ -377,7 +347,8 @@
             + \underbrace{T_i}_{\{0, 1\}} \underbrace{\thetat}_{\R^{1 \times d}}
             + \underbrace{\C_{i \cdot}}_{\R^{1 \times p'}} \underbrace{\Thetac}_{\R^{p' \times d}}
             + \underbrace{T_i}_{\{0, 1\}} \underbrace{\C_{i \cdot}}_{\R^{1 \times p'}} \underbrace{\Thetatc}_{\R^{p' \times d}}.
-        \end{aligned} \end{equation*}
+        \end{aligned}
+    \end{equation*}
 
     Then:
 
@@ -386,6 +357,26 @@
         \nief & = \paren*{t - t^*} \, \thetat \, \betax + (t - t^*) \, \mu_c \, \Thetatc \, \betax.
     \end{align*}
 
+\end{frame}
+
+
+\begin{frame}{Regression estimators}
+
+    \textbf{Challenge}: regression models depend on $\X$, but we only have an estimate $\Xhat$.
+
+    \vspace{3mm}
+
+    Turns out this is fine. Let $\Dhat = \begin{bmatrix} \W & \Xhat \end{bmatrix} \in \mathbb{R}^{n \times (p + d)}$. We estimate $\betaw$ and $\betax$ via ordinary least squares as follows
+
+    \begin{align*}
+        \begin{bmatrix}
+            \betawhat \\
+            \betaxhat
+        \end{bmatrix}
+         & = \paren*{\Dhat^T \Dhat}^{-1} \Dhat^T Y \\
+        \Thetahat
+         & = \paren*{\W^T \W}^{-1} \W^T \Xhat.
+    \end{align*}
 \end{frame}
 
 \begin{frame}{Causal estimators}
@@ -401,26 +392,6 @@
 
 \end{frame}
 
-
-\begin{frame}{Our estimator: plug ASE into ordinary least squares}
-
-    Let $\Dhat = \begin{bmatrix} \W & \Xhat \end{bmatrix} \in \mathbb{R}^{n \times (p + d)}$. We estimate $\betaw$ and $\betax$ via ordinary least squares as follows
-
-    \begin{align*}
-        \begin{bmatrix}
-            \betawhat \\
-            \betaxhat
-        \end{bmatrix}
-        = \paren*{\Dhat^T \Dhat}^{-1} \Dhat^T Y.
-    \end{align*}
-
-    Similarly, we estimate $\Theta$ via ordinary least squares as
-
-    \begin{align*}
-        \Thetahat
-        = \paren*{\W^T \W}^{-1} \W^T \Xhat.
-    \end{align*}
-\end{frame}
 
 \begin{frame}{Main statistical result}
 
@@ -477,9 +448,22 @@
 
 \end{frame}
 
-\begin{frame}{Application to Glasgow data}
-    TODO
+\begin{frame}
+    \centering
+    \vspace{3mm}
+    \begin{figure}
+        \includegraphics[width=\textwidth]{figures/glasgow-alcohol.png}
+    \end{figure}
 \end{frame}
+
+\begin{frame}
+    \centering
+    \vspace{3mm}
+    \begin{figure}
+        \includegraphics[width=\textwidth]{figures/glasgow-estimates.png}
+    \end{figure}
+\end{frame}
+
 
 \begin{frame}{Thank you! Questions?}
 
@@ -504,40 +488,54 @@
 
 \section{Appendix}
 
-\begin{frame}{Choosing the rank of the network}
+\begin{frame}{Choosing $\widehat{d}$: overestimating the embedding dimension is fine}
 
-    \begin{itemize}
-        \item Use cross-validated eigenvalues by \cite{chen_estimating_2021}
-        \item Check sensitivity of results to choice of $\widehat{d}$
-    \end{itemize}
+    \centering
 
-    TODO: rank misspecification figure goes here
+    \begin{figure}
+        \includegraphics[width=\textwidth]{figures/misspecification/block2_normal_misspecification_loss_average.png}
+    \end{figure}
 
 \end{frame}
 
 \begin{frame}{A more natural parameterization for the regressions}
 
-    TODO: include result from Appendix of paper
+    $\X$ is not the most intuitive way to parameterize a blockmodel. Suppose that $Z \in \R^{n \times d}$ and $B \in \R^{d \times d}$ are arbitrary full-rank matrices such that $\E[Z, B]{A} = Z B Z^T$. If
+
+    \begin{align*}
+        \Z = W \Theta' + \xi',                     \qquad \text{ and } \qquad
+        Y  = W \betaw + Z \betaz + \varepsilon'
+    \end{align*}
+
+    \noindent then there exist $\Theta, \betax, \xi, \varepsilon$ such that
+
+    \begin{align*}
+        \X = W \Theta + \xi,                     \qquad \text{ and } \qquad
+        Y  = W \betaw + \X \betax + \varepsilon.
+    \end{align*}
 
 \end{frame}
 
 \begin{frame}{Interference and contagion}
 
-    TODO: include result from Appendix of paper
+    Interference and contagion effects are allowed \emph{so long as they happen in the latent space}. Suppose
+
+    \begin{align*}
+        \E[\W_{i \cdot}, \X_{i \cdot}]{Y_i}
+        = \W_{i \cdot} \betaw + \X_{i \cdot} \beta'_\text{x} + \delta_\text{y} \sum_{j} \X_{i \cdot}^T \X_{j \cdot} Y_j
+    \end{align*}
+
+    This latent space contagion model is a special parametric case of the regression outcome model (take $\betax = \beta'_\text{x} + \X^T Y \delta_\text{y}$).
 
 \end{frame}
 
-\begin{frame}{Applications outside of network data}
 
-    TODO: include result from Appendix of paper
 
-\end{frame}
+% \begin{frame}{Overcontrol bias}
 
-\begin{frame}{Overcontrol bias}
+%     TODO: include result from Appendix of paper
 
-    TODO: include result from Appendix of paper
-
-\end{frame}
+% \end{frame}
 
 \begin{frame}{Identifying assumptions}
 
@@ -599,7 +597,7 @@
 \begin{frame}{Interventions on a network}
 
     \begin{align*}
-        \underbrace{\E[T_i, \C_{i \cdot}]{\X_{i \cdot}}}_{\R^{1 \times d}}
+        \underbrace{\E[T_i, \C_{i \cdot}]{\Z_{i \cdot}}}_{\R^{1 \times d}}
          & = \underbrace{\thetazero}_{\R^{1 \times d}}
         + \underbrace{T_i}_{\{0, 1\}} \underbrace{\thetat}_{\R^{1 \times d}}
         + \underbrace{\C_{i \cdot}}_{\R^{1 \times p'}} \underbrace{\Thetac}_{\R^{p' \times d}}
@@ -618,6 +616,20 @@
             0  & 0 & 0  & 0 & 0 \\
         \end{bmatrix}
     \end{align*}
+\end{frame}
+
+\begin{frame}{Interventions allowed}
+
+    Provided that controls $\C_{i \cdot}$ are sufficiently informative about group membership $\X_{i \cdot}$, treatment $T_i$ is allowed to cause:
+
+    \begin{itemize}
+        \item Changes in popularity within a group
+        \item Movement to a new friend group
+        \item Becoming a member of a new friend group while remaining in current friend group
+        \item Friendships becoming more or less likely between distinct friend groups
+        \item Combinations of the above
+    \end{itemize}
+
 \end{frame}
 
 \bibliographystyle{chicago}
